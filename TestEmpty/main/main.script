@@ -1,0 +1,86 @@
+local reszip = require "liveupdate_reszip.reszip"
+
+local ZIP_FILENAME = sys.get_config("liveupdate_reszip.filename", "resources.zip")
+
+-- HTML5: use relative path to load the .zip from the game directory
+-- Other platforms: load .zip from your remote server.
+local ZIP_FILE_LOCATION = (html5 and ZIP_FILENAME) or ("http://localhost:8080/" .. ZIP_FILENAME)
+
+local EXCLUDED_PROXY_URL = "/level2#collectionproxy"
+local LEVEL1_PROXY_URL = "/go#collectionproxy"
+
+local function http_loading_progress_handler(self, loaded, total)
+   -- msg.post("#loading_progress", "enable")
+
+    local progress = string.format("%dKB / %dKB", loaded / 1024, total / 1024)
+   -- label.set_text("#loading_progress", progress)
+end
+
+local function load_level2(self)
+    local missing_resources = collectionproxy.missing_resources(LEVEL1_PROXY_URL)
+    if next(missing_resources) ~= nil then
+        print("Resources are missing, downloading...")
+
+        -- Global ResZip settings (HTML5 only).
+        reszip.RESOURCES_PER_BATCH = 10
+        reszip.BATCH_MAX_TIME = 0.0333 -- 2/60 frames.
+
+        -- TIP: You can pass the "missing_resources" table instead of "nil" to load only missing resources.
+        reszip.request_and_load_zip(ZIP_FILE_LOCATION, nil, function(self, err)
+            if not err then
+                -- All resources are loaded, finally load the level:
+                print("Everything is OK, load the level 2!")
+                msg.post(LEVEL1_PROXY_URL, hash("load"))
+
+                -- Free the memory, if you are not going to use the `resources.zip` file later (i.e. you can )
+                reszip.clear_cache()
+            else
+                -- Try again?...
+                print("ERROR: " .. err)
+            end
+        end, http_loading_progress_handler)
+    else
+        -- All resources exist, so load the level:
+        print("Resources are already loaded. Let's load the level 2!")
+        msg.post(LEVEL1_PROXY_URL, hash("load"))
+    end
+end
+
+function init(self)
+    msg.post(".", "acquire_input_focus")
+    msg.post("@render:", "use_fixed_fit_projection", {near = -1, far = 1})
+
+    load_level2(self)
+end
+
+function final(self)
+end
+
+function update(self, dt)
+end
+
+function on_message(self, message_id, message, sender)
+    if message_id == hash("proxy_loaded") then
+     --   msg.post("#loading_title", "disable")
+     --   msg.post("#loading_progress", "disable")
+
+        msg.post(sender, "enable")
+    end
+end
+
+function on_input(self, action_id, action)
+    if action_id == hash("touch") and action.pressed then
+        if self.level2_flag then
+            return
+        end
+        self.level2_flag = true
+
+      --  msg.post("#loading_title", "enable")
+      --  msg.post(LEVEL1_PROXY_URL, "unload")
+
+        load_level2(self)
+    end
+end
+
+function on_reload(self)
+end

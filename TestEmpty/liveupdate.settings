@@ -1,0 +1,5 @@
+[liveupdate]
+mode = Zip
+zip-filepath = G:\Apache\Apache24\htdocs
+supported-versions = 
+

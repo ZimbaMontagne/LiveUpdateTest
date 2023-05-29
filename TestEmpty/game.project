@@ -1,0 +1,29 @@
+[bootstrap]
+main_collection = /main/main.collectionc
+
+[script]
+shared_state = 1
+
+[display]
+width = 1920
+height = 1080
+display_device_info = 1
+
+[android]
+input_method = HiddenInputField
+
+[project]
+title = TestEmpty
+dependencies#0 = https://github.com/indiesoftby/defold-liveupdate-reszip/archive/main.zip
+
+[html5]
+wasm_streaming = 1
+show_made_with_defold = 0
+show_console_banner = 0
+scale_mode = no_scale
+htmlfile = /builtins/manifests/web/engine_template.html
+cssfile = /builtins/manifests/web/dark_theme.css
+
+[native_extension]
+app_manifest = /manifest.appmanifest
+
